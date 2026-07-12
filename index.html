@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Descargas - Kirito</title>
+<style>
+:root{--bg:#0a0e17;--card:#111827;--cardh:#1a2332;--a:#3b82f6;--ag:rgba(59,130,246,.3);--t:#f1f5f9;--ts:#94a3b8;--b:#1e293b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+.bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden}
+.bg::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);top:-200px;right:-200px;animation:f 20s ease-in-out infinite}
+.bg::after{content:'';position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(59,130,246,.05) 0%,transparent 70%);bottom:-100px;left:-100px;animation:f 25s ease-in-out infinite reverse}
+@keyframes f{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-30px) scale(1.1)}66%{transform:translate(-20px,20px) scale(.9)}}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:20px}
+header{text-align:center;padding:40px 0 30px;border-bottom:1px solid var(--b);margin-bottom:30px;position:relative}
+header h1{font-size:2.8rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#3b82f6,#1d4ed8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+header p{color:var(--ts);font-size:1.1rem}
+.badge{position:absolute;top:20px;right:0;background:linear-gradient(135deg,var(--a),#1d4ed8);padding:8px 18px;border-radius:20px;font-size:.85rem;font-weight:600;box-shadow:0 4px 15px var(--ag);animation:p 3s ease-in-out infinite}
+@keyframes p{0%,100%{box-shadow:0 4px 15px var(--ag)}50%{box-shadow:0 4px 25px rgba(59,130,246,.5)}}
+.search{position:relative;max-width:600px;margin:0 auto 40px}
+.search input{width:100%;padding:16px 24px 16px 52px;background:var(--card);border:2px solid var(--b);border-radius:16px;color:var(--t);font-size:1rem;outline:none;transition:.3s}
+.search input:focus{border-color:var(--a);box-shadow:0 0 20px var(--ag)}
+.search input::placeholder{color:var(--ts)}
+.search svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--a);width:22px;height:22px}
+.tabs{display:flex;gap:10px;margin-bottom:30px;flex-wrap:wrap;justify-content:center}
+.tab{padding:12px 24px;background:var(--card);border:1px solid var(--b);border-radius:12px;cursor:pointer;transition:.3s;display:flex;align-items:center;gap:8px;font-weight:500;color:var(--ts)}
+.tab:hover{background:var(--cardh);border-color:var(--a);color:var(--t)}
+.tab.active{background:linear-gradient(135deg,var(--a),#1d4ed8);border-color:var(--a);color:#fff;box-shadow:0 4px 20px var(--ag)}
+.tab .n{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:10px;font-size:.75rem}
+.sec{font-size:1.3rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.sec .ln{flex:1;height:1px;background:linear-gradient(90deg,var(--b),transparent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:40px}
+.card{background:var(--card);border:1px solid var(--b);border-radius:16px;padding:24px;transition:.3s;position:relative;overflow:hidden;cursor:pointer}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--a),transparent);opacity:0;transition:.3s}
+.card:hover{transform:translateY(-4px);border-color:var(--a);box-shadow:0 10px 40px rgba(0,0,0,.4),0 0 20px var(--ag)}
+.card:hover::before{opacity:1}
+.ch{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+.ci{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.ci.lk{background:rgba(52,211,153,.15)}.ci.vd{background:rgba(244,114,182,.15)}.ci.dc{background:rgba(251,191,36,.15)}.ci.ot{background:rgba(167,139,250,.15)}
+.ct{font-size:1.1rem;font-weight:700;line-height:1.3;word-break:break-word}
+.cm{font-size:.8rem;color:var(--ts);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.cm .bgd{padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:600;text-transform:uppercase}
+.blk{background:rgba(52,211,153,.2);color:#34d399}.bvd{background:rgba(244,114,182,.2);color:#f472b6}.bdc{background:rgba(251,191,36,.2);color:#fbbf24}.bot{background:rgba(167,139,250,.2);color:#a78bfa}
+.cc{color:var(--ts);font-size:.9rem;line-height:1.6;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ca{display:flex;gap:10px}
+.btn{padding:10px 18px;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;border:none;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center}
+.btn-p{background:linear-gradient(135deg,var(--a),#1d4ed8);color:#fff}.btn-p:hover{transform:scale(1.02);box-shadow:0 4px 20px var(--ag)}
+.btn-s{background:var(--cardh);color:var(--t);border:1px solid var(--b)}.btn-s:hover{border-color:var(--a);background:rgba(59,130,246,.1)}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;opacity:0;transition:.3s}
+.ov.on{display:flex;opacity:1}
+.md{background:var(--card);border:1px solid var(--b);border-radius:20px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:32px;position:relative;box-shadow:0 25px 50px rgba(0,0,0,.5)}
+.cl{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:var(--cardh);border:1px solid var(--b);color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:.2s}
+.cl:hover{background:var(--a);color:#fff;border-color:var(--a)}
+.di{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:16px}
+.dt{font-size:1.5rem;font-weight:800;margin-bottom:8px;word-break:break-word}
+.dm{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap}.dm span{color:var(--ts);font-size:.9rem}
+.dc2{background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:20px;margin-bottom:24px;color:var(--ts);line-height:1.7;font-size:.95rem;word-break:break-word;max-height:300px;overflow-y:auto}
+.dc2 pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;margin:0}
+.da{display:flex;gap:12px}.da .btn{flex:1;padding:14px;font-size:1rem}
+.empty{text-align:center;padding:60px 20px;color:var(--ts)}
+.empty svg{width:80px;height:80px;margin-bottom:20px;opacity:.3}
+.empty h3{font-size:1.3rem;color:var(--t);margin-bottom:8px}
+.ft{text-align:center;padding:40px 0;color:var(--ts);font-size:.9rem;border-top:1px solid var(--b);margin-top:40px}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--b);border-radius:4px}::-webkit-scrollbar-thumb:hover{background:var(--a)}
+@media(max-width:768px){header h1{font-size:2rem}.badge{position:static;margin-top:15px;display:inline-block}.grid{grid-template-columns:1fr}.tabs{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.md{padding:20px}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="wrap">
+<header>
+<div class="badge">✨ Creado por Kirito</div>
+<h1>📦 Portal de Descargas</h1>
+<p>Todo tu contenido organizado en carpetas</p>
+</header>
+<div class="search">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+<input type="text" id="s" placeholder="Buscar por nombre...">
+</div>
+<div class="tabs" id="tabs"></div>
+<div id="rs" style="display:none">
+<div class="sec"><span>🎲 Destacados Aleatorios</span><div class="ln"></div></div>
+<div class="grid" id="rg"></div>
+</div>
+<div class="sec"><span id="rt">📂 Todo el Contenido</span><div class="ln"></div></div>
+<div class="grid" id="mg"></div>
+<div class="empty" id="em" style="display:none">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+<h3>No se encontraron resultados</h3><p>Intenta con otra busqueda</p>
+</div>
+<div class="ft"><p>Portal de Descargas · Creado por <strong style="color:var(--a)">Kirito</strong></p></div>
+</div>
+<div class="ov" id="ov" onclick="cd(event)">
+<div class="md" onclick="event.stopPropagation()">
+<button class="cl" onclick="cd()">×</button>
+<div id="dc"></div>
+</div>
+</div>
+<script>
+const contentData = [{"id": 1, "folder": "videos", "folderName": "🎬 Videos", "type": "video", "title": "Sky", "content": "Video sky.mp4", "url": "videos/sky.mp4", "filename": "sky.mp4", "date": "2026-07-12", "size": "-"}, {"id": 2, "folder": "videos", "folderName": "🎬 Videos", "type": "video", "title": "Fnf", "content": "Video fnf.mp4", "url": "videos/fnf.mp4", "filename": "fnf.mp4", "date": "2026-07-12", "size": "-"}];
+const IM={link:{e:'🔗',c:'lk'},video:{e:'🎬',c:'vd'},doc:{e:'📄',c:'dc'},other:{e:'📦',c:'ot'}};
+const BM={link:'blk',video:'bvd',doc:'bdc',other:'bot'};
+const TL={link:'Link',video:'Video',doc:'Documento',other:'Archivo'};
+let cf='all',sq='';
+function getFD(){const f={};contentData.forEach(i=>{if(!f[i.folder])f[i.folder]={name:i.folderName,count:0};f[i.folder].count++;});return f;}
+function renderTabs(){const f=getFD();const t=document.getElementById('tabs');let h='<div class="tab '+(cf==='all'?'active':'')+'" onclick="sf(\'all\')">📂 Todo <span class="n">'+contentData.length+'</span></div>';Object.entries(f).forEach(([k,d])=>{h+='<div class="tab '+(cf===k?'active':'')+'" onclick="sf(\''+k+'\')">'+d.name+' <span class="n">'+d.count+'</span></div>';});t.innerHTML=h;}
+function rc(i){const ic=IM[i.type]||IM.other;const bd=BM[i.type]||'bot';const lb=TL[i.type]||'Archivo';return '<div class="card" onclick="od('+i.id+')"><div class="ch"><div class="ci '+ic.c+'">'+ic.e+'</div><div><div class="ct">'+esc(i.title)+'</div><div class="cm"><span class="bgd '+bd+'">'+lb+'</span><span>📅 '+i.date+'</span><span>💾 '+i.size+'</span></div></div></div><div class="cc">'+esc((i.content||'').split('\n')[0])+'</div><div class="ca"><button class="btn btn-p" onclick="event.stopPropagation();dl('+i.id+')">⬇️ Descargar</button><button class="btn btn-s" onclick="event.stopPropagation();od('+i.id+')">👁️ Ver</button></div></div>';}
+function getF(){let it=contentData;if(cf!=='all')it=it.filter(i=>i.folder===cf);if(sq){const q=sq.toLowerCase();it=it.filter(i=>i.title.toLowerCase().includes(q)||(i.content||'').toLowerCase().includes(q)||i.folderName.toLowerCase().includes(q)||i.filename.toLowerCase().includes(q));}return it;}
+function renderGrid(){const it=getF();const g=document.getElementById('mg');const e=document.getElementById('em');const rs=document.getElementById('rs');if(it.length===0){g.innerHTML='';e.style.display='block';rs.style.display='none';document.getElementById('rt').textContent='🔍 Resultados';return;}e.style.display='none';if(!sq&&cf==='all'){rs.style.display='block';const sh=[...contentData].sort(()=>.5-Math.random()).slice(0,4);document.getElementById('rg').innerHTML=sh.map(rc).join('');document.getElementById('rt').textContent='📂 Todo el Contenido';}else{rs.style.display='none';document.getElementById('rt').textContent=sq?'🔍 "'+sq+'" ('+it.length+')':'📂 Contenido';}g.innerHTML=it.map(rc).join('');}
+function sf(f){cf=f;renderTabs();renderGrid();}
+function od(id){const i=contentData.find(x=>x.id===id);if(!i)return;const ic=IM[i.type]||IM.other;const bd=BM[i.type]||'bot';const lb=TL[i.type]||'Archivo';const lk=i.type==='link';document.getElementById('dc').innerHTML='<div class="di '+ic.c+'">'+ic.e+'</div><div class="dt">'+esc(i.title)+'</div><div class="dm"><span class="bgd '+bd+'">'+lb+'</span><span>📁 '+i.folderName+'</span><span>📅 '+i.date+'</span><span>💾 '+i.size+'</span></div><div class="dc2"><pre>'+esc(i.content)+'</pre></div><div class="da"><a href="'+i.url+'" target="_blank" class="btn btn-p" '+(lk?'':'download')+'>'+(lk?'🌐 Abrir Link':'⬇️ Descargar')+'</a><button class="btn btn-s" onclick="cd()">Cerrar</button></div>';document.getElementById('ov').classList.add('on');document.body.style.overflow='hidden';}
+function cd(ev){if(ev&&ev.target!==ev.currentTarget)return;document.getElementById('ov').classList.remove('on');document.body.style.overflow='';}
+function dl(id){const i=contentData.find(x=>x.id===id);if(!i)return;if(i.type==='link')window.open(i.url,'_blank');else{const a=document.createElement('a');a.href=i.url;a.download=i.filename||i.title;a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);}}
+function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
+document.getElementById('s').addEventListener('input',e=>{sq=e.target.value.trim();renderGrid();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cd();if(e.key==='/'&&document.activeElement!==document.getElementById('s')){e.preventDefault();document.getElementById('s').focus();}});
+renderTabs();renderGrid();
+</script>
+</body>
+</html>

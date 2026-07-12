@@ -1,0 +1,2 @@
+https://docs.python.org/es/3/tutorial/
+Tutorial oficial de Python en español. Desde variables hasta clases.

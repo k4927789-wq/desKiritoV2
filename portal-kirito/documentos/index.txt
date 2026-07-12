@@ -1,0 +1,5 @@
+manual-usuario.pdf | Manual completo del sistema v2.0
+guia-estilos.pdf | Estándares de código para el equipo
+plantilla-proyecto.zip | Template base para nuevos proyectos
+cheatsheet-git.pdf | Comandos Git rápidos de referencia
+api-documentation.pdf | Documentación de la API REST

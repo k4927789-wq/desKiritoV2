@@ -1,0 +1,2 @@
+https://developer.mozilla.org/es/docs/Web/JavaScript
+Guía completa de JavaScript moderno. Incluye ES6+, DOM, APIs y más ejemplos prácticos.

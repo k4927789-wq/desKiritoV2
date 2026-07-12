@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador Portal - Kirito</title>
+<style>
+:root{--bg:#0a0e17;--card:#111827;--a:#3b82f6;--t:#f1f5f9;--ts:#94a3b8;--b:#1e293b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;padding:40px 20px}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:2.5rem;background:linear-gradient(135deg,#60a5fa,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+p{color:var(--ts);margin-bottom:30px;font-size:1.1rem}
+.box{background:var(--card);border:1px solid var(--b);border-radius:16px;padding:24px;margin-bottom:20px}
+.box h2{font-size:1.2rem;margin-bottom:12px;color:var(--a)}
+.box p{color:var(--ts);margin-bottom:16px;line-height:1.6}
+.code{background:#0d1117;border:1px solid var(--b);border-radius:8px;padding:16px;font-family:monospace;font-size:.85rem;color:#c9d1d9;overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin:12px 0}
+.btn{background:linear-gradient(135deg,var(--a),#1d4ed8);color:#fff;border:none;padding:14px 28px;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:.2s}
+.btn:hover{transform:scale(1.02);box-shadow:0 4px 20px rgba(59,130,246,.3)}
+input[type="file"]{display:none}
+.file-btn{background:var(--card);border:2px dashed var(--b);border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.3s;margin-bottom:16px}
+.file-btn:hover{border-color:var(--a);background:rgba(59,130,246,.05)}
+.file-btn svg{width:40px;height:40px;color:var(--a);margin-bottom:10px}
+.file-btn p{color:var(--ts)}
+#output{display:none}
+textarea{width:100%;min-height:400px;background:#0d1117;border:1px solid var(--b);border-radius:8px;padding:16px;color:#c9d1d9;font-family:monospace;font-size:.8rem;resize:vertical}
+.status{padding:12px 16px;border-radius:8px;margin-top:12px;font-size:.9rem}
+.status.ok{background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.2)}
+.status.info{background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🔧 Generador de Portal</h1>
+<p>Creado por Kirito — Genera tu pagina lista para GitHub Pages</p>
+
+<div class="box">
+<h2>📄 Selecciona los archivos index.txt de tus carpetas</h2>
+<p>Selecciona TODOS los archivos <code>index.txt</code> de tus carpetas (Ctrl+Click para varios).</p>
+<label class="file-btn" id="dropZone">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+<p>📂 Haz clic o arrastra los archivos index.txt aqui</p>
+</label>
+<input type="file" id="fileInput" multiple accept=".txt">
+<div id="fileList"></div>
+</div>
+
+<div class="box" id="output">
+<h2>✅ Tu index.html esta listo</h2>
+<p>Copia TODO este codigo, pegalo en un archivo <code>index.html</code> y subelo a tu repo.</p>
+<textarea id="resultCode" readonly></textarea>
+<button class="btn" onclick="copyCode()" style="margin-top:12px">📋 Copiar al portapapeles</button>
+<div id="copyStatus"></div>
+</div>
+
+<div class="box">
+<h2>📋 Formato de index.txt</h2>
+<p>Cada carpeta necesita un archivo <code>index.txt</code>:</p>
+<div class="code">sky.mp4 | Video de Sky
+fnf.mp4 | Video de Friday Night Funkin</div>
+<p><strong>Para links:</strong> Archivo <code>.txt</code> con el URL en la primera linea:</p>
+<div class="code">https://developer.mozilla.org/es/docs/Web/JavaScript
+Guia completa de JavaScript.</div>
+</div>
+</div>
+
+<script>
+const folderEmojis = {links:'🔗',videos:'🎬',documentos:'📄',archivos:'📦',musica:'🎵',imagenes:'🖼️',programas:'💻',juegos:'🎮',libros:'📚',default:'📁'};
+const folderTypes = {links:'link',videos:'video',documentos:'doc',archivos:'other',musica:'other',imagenes:'other',programas:'other',juegos:'other',libros:'doc',default:'other'};
+let uploadedFiles = [];
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileList = document.getElementById('fileList');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--a)'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--b)'; });
+dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--b)'; handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  let processed = 0;
+  for (const file of files) {
+    if (file.name.endsWith('.txt')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        let folderName = 'carpeta';
+        if (file.webkitRelativePath) {
+          const parts = file.webkitRelativePath.split('/');
+          if (parts.length > 1) folderName = parts[parts.length - 2];
+        } else {
+          folderName = file.name.replace('.txt', '').replace('index', '').replace(/[-_]/g, '').trim() || 'carpeta';
+        }
+        uploadedFiles.push({ name: file.name, folder: folderName, content: e.target.result });
+        processed++;
+        if (processed >= files.length) { updateFileList(); generatePage(); }
+      };
+      reader.readAsText(file);
+    }
+  }
+}
+
+function updateFileList() {
+  if (uploadedFiles.length === 0) { fileList.innerHTML = ''; return; }
+  let html = '<div class="status info">📄 Archivos cargados:</div><div class="code">';
+  uploadedFiles.forEach(f => { const lines = f.content.split('\n').filter(l => l.trim()); html += '📁 ' + f.folder + '/index.txt — ' + lines.length + ' items\n'; });
+  html += '</div>';
+  fileList.innerHTML = html;
+}
+
+function generatePage() {
+  if (uploadedFiles.length === 0) return;
+  const items = []; let itemId = 1;
+  uploadedFiles.forEach(file => {
+    const folderName = file.folder;
+    const emoji = folderEmojis[folderName] || folderEmojis.default;
+    const type = folderTypes[folderName] || folderTypes.default;
+    const displayName = emoji + ' ' + folderName.charAt(0).toUpperCase() + folderName.slice(1);
+    const lines = file.content.split('\n').filter(l => l.trim());
+    lines.forEach(line => {
+      const parts = line.split('|').map(p => p.trim());
+      const filename = parts[0]; const description = parts[1] || '';
+      if (!filename) return;
+      const ext = filename.split('.').pop().toLowerCase();
+      const nameNoExt = filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      let itemType = type;
+      if (['mp4','avi','mkv','mov','webm'].includes(ext)) itemType = 'video';
+      else if (['pdf','doc','docx','md','epub'].includes(ext)) itemType = 'doc';
+      let url = folderName + '/' + filename;
+      let content = description;
+      items.push({ id: itemId++, folder: folderName, folderName: displayName, type: itemType, title: nameNoExt, content: content || 'Archivo: ' + filename, url: url, filename: filename, date: new Date().toISOString().split('T')[0], size: '-' });
+    });
+  });
+  const pageCode = generateStaticPage(items);
+  document.getElementById('resultCode').value = pageCode;
+  document.getElementById('output').style.display = 'block';
+}
+
+function generateStaticPage(items) {
+  const itemsJson = JSON.stringify(items, null, 2);
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Descargas - Kirito</title>
+<style>
+:root{--bg:#0a0e17;--card:#111827;--cardh:#1a2332;--a:#3b82f6;--ag:rgba(59,130,246,.3);--t:#f1f5f9;--ts:#94a3b8;--b:#1e293b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+.bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden}
+.bg::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(59,130,246,.08) 0%,transparent 70%);top:-200px;right:-200px;animation:f 20s ease-in-out infinite}
+.bg::after{content:'';position:absolute;width:400px;height:400px;background:radial-gradient(circle,rgba(59,130,246,.05) 0%,transparent 70%);bottom:-100px;left:-100px;animation:f 25s ease-in-out infinite reverse}
+@keyframes f{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-30px) scale(1.1)}66%{transform:translate(-20px,20px) scale(.9)}}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:20px}
+header{text-align:center;padding:40px 0 30px;border-bottom:1px solid var(--b);margin-bottom:30px;position:relative}
+header h1{font-size:2.8rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#3b82f6,#1d4ed8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+header p{color:var(--ts);font-size:1.1rem}
+.badge{position:absolute;top:20px;right:0;background:linear-gradient(135deg,var(--a),#1d4ed8);padding:8px 18px;border-radius:20px;font-size:.85rem;font-weight:600;box-shadow:0 4px 15px var(--ag);animation:p 3s ease-in-out infinite}
+@keyframes p{0%,100%{box-shadow:0 4px 15px var(--ag)}50%{box-shadow:0 4px 25px rgba(59,130,246,.5)}}
+.search{position:relative;max-width:600px;margin:0 auto 40px}
+.search input{width:100%;padding:16px 24px 16px 52px;background:var(--card);border:2px solid var(--b);border-radius:16px;color:var(--t);font-size:1rem;outline:none;transition:.3s}
+.search input:focus{border-color:var(--a);box-shadow:0 0 20px var(--ag)}
+.search input::placeholder{color:var(--ts)}
+.search svg{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:var(--a);width:22px;height:22px}
+.tabs{display:flex;gap:10px;margin-bottom:30px;flex-wrap:wrap;justify-content:center}
+.tab{padding:12px 24px;background:var(--card);border:1px solid var(--b);border-radius:12px;cursor:pointer;transition:.3s;display:flex;align-items:center;gap:8px;font-weight:500;color:var(--ts)}
+.tab:hover{background:var(--cardh);border-color:var(--a);color:var(--t)}
+.tab.active{background:linear-gradient(135deg,var(--a),#1d4ed8);border-color:var(--a);color:#fff;box-shadow:0 4px 20px var(--ag)}
+.tab .n{background:rgba(255,255,255,.2);padding:2px 8px;border-radius:10px;font-size:.75rem}
+.sec{font-size:1.3rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.sec .ln{flex:1;height:1px;background:linear-gradient(90deg,var(--b),transparent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:40px}
+.card{background:var(--card);border:1px solid var(--b);border-radius:16px;padding:24px;transition:.3s;position:relative;overflow:hidden;cursor:pointer}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--a),transparent);opacity:0;transition:.3s}
+.card:hover{transform:translateY(-4px);border-color:var(--a);box-shadow:0 10px 40px rgba(0,0,0,.4),0 0 20px var(--ag)}
+.card:hover::before{opacity:1}
+.ch{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+.ci{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.ci.lk{background:rgba(52,211,153,.15)}.ci.vd{background:rgba(244,114,182,.15)}.ci.dc{background:rgba(251,191,36,.15)}.ci.ot{background:rgba(167,139,250,.15)}
+.ct{font-size:1.1rem;font-weight:700;line-height:1.3;word-break:break-word}
+.cm{font-size:.8rem;color:var(--ts);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.cm .bgd{padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:600;text-transform:uppercase}
+.blk{background:rgba(52,211,153,.2);color:#34d399}.bvd{background:rgba(244,114,182,.2);color:#f472b6}.bdc{background:rgba(251,191,36,.2);color:#fbbf24}.bot{background:rgba(167,139,250,.2);color:#a78bfa}
+.cc{color:var(--ts);font-size:.9rem;line-height:1.6;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ca{display:flex;gap:10px}
+.btn{padding:10px 18px;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;border:none;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center}
+.btn-p{background:linear-gradient(135deg,var(--a),#1d4ed8);color:#fff}.btn-p:hover{transform:scale(1.02);box-shadow:0 4px 20px var(--ag)}
+.btn-s{background:var(--cardh);color:var(--t);border:1px solid var(--b)}.btn-s:hover{border-color:var(--a);background:rgba(59,130,246,.1)}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;opacity:0;transition:.3s}
+.ov.on{display:flex;opacity:1}
+.md{background:var(--card);border:1px solid var(--b);border-radius:20px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;padding:32px;position:relative;box-shadow:0 25px 50px rgba(0,0,0,.5)}
+.cl{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:var(--cardh);border:1px solid var(--b);color:var(--ts);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:.2s}
+.cl:hover{background:var(--a);color:#fff;border-color:var(--a)}
+.di{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:16px}
+.dt{font-size:1.5rem;font-weight:800;margin-bottom:8px;word-break:break-word}
+.dm{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap}.dm span{color:var(--ts);font-size:.9rem}
+.dc2{background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:20px;margin-bottom:24px;color:var(--ts);line-height:1.7;font-size:.95rem;word-break:break-word;max-height:300px;overflow-y:auto}
+.dc2 pre{white-space:pre-wrap;word-break:break-word;font-family:inherit;margin:0}
+.da{display:flex;gap:12px}.da .btn{flex:1;padding:14px;font-size:1rem}
+.empty{text-align:center;padding:60px 20px;color:var(--ts)}
+.empty svg{width:80px;height:80px;margin-bottom:20px;opacity:.3}
+.empty h3{font-size:1.3rem;color:var(--t);margin-bottom:8px}
+.ft{text-align:center;padding:40px 0;color:var(--ts);font-size:.9rem;border-top:1px solid var(--b);margin-top:40px}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--b);border-radius:4px}::-webkit-scrollbar-thumb:hover{background:var(--a)}
+@media(max-width:768px){header h1{font-size:2rem}.badge{position:static;margin-top:15px;display:inline-block}.grid{grid-template-columns:1fr}.tabs{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.md{padding:20px}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="wrap">
+<header>
+<div class="badge">✨ Creado por Kirito</div>
+<h1>📦 Portal de Descargas</h1>
+<p>Todo tu contenido organizado en carpetas</p>
+</header>
+<div class="search">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+<input type="text" id="s" placeholder="Buscar por nombre...">
+</div>
+<div class="tabs" id="tabs"></div>
+<div id="rs" style="display:none">
+<div class="sec"><span>🎲 Destacados Aleatorios</span><div class="ln"></div></div>
+<div class="grid" id="rg"></div>
+</div>
+<div class="sec"><span id="rt">📂 Todo el Contenido</span><div class="ln"></div></div>
+<div class="grid" id="mg"></div>
+<div class="empty" id="em" style="display:none">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+<h3>No se encontraron resultados</h3><p>Intenta con otra busqueda</p>
+</div>
+<div class="ft"><p>Portal de Descargas · Creado por <strong style="color:var(--a)">Kirito</strong></p></div>
+</div>
+<div class="ov" id="ov" onclick="cd(event)">
+<div class="md" onclick="event.stopPropagation()">
+<button class="cl" onclick="cd()">×</button>
+<div id="dc"></div>
+</div>
+</div>
+<script>
+const contentData = ` + itemsJson + `;
+const IM={link:{e:'🔗',c:'lk'},video:{e:'🎬',c:'vd'},doc:{e:'📄',c:'dc'},other:{e:'📦',c:'ot'}};
+const BM={link:'blk',video:'bvd',doc:'bdc',other:'bot'};
+const TL={link:'Link',video:'Video',doc:'Documento',other:'Archivo'};
+let cf='all',sq='';
+function getFD(){const f={};contentData.forEach(i=>{if(!f[i.folder])f[i.folder]={name:i.folderName,count:0};f[i.folder].count++;});return f;}
+function renderTabs(){const f=getFD();const t=document.getElementById('tabs');let h='<div class="tab '+(cf==='all'?'active':'')+'" onclick="sf(\'all\')">📂 Todo <span class="n">'+contentData.length+'</span></div>';Object.entries(f).forEach(([k,d])=>{h+='<div class="tab '+(cf===k?'active':'')+'" onclick="sf(\''+k+'\')">'+d.name+' <span class="n">'+d.count+'</span></div>';});t.innerHTML=h;}
+function rc(i){const ic=IM[i.type]||IM.other;const bd=BM[i.type]||'bot';const lb=TL[i.type]||'Archivo';return '<div class="card" onclick="od('+i.id+')"><div class="ch"><div class="ci '+ic.c+'">'+ic.e+'</div><div><div class="ct">'+esc(i.title)+'</div><div class="cm"><span class="bgd '+bd+'">'+lb+'</span><span>📅 '+i.date+'</span><span>💾 '+i.size+'</span></div></div></div><div class="cc">'+esc((i.content||'').split('\n')[0])+'</div><div class="ca"><button class="btn btn-p" onclick="event.stopPropagation();dl('+i.id+')">⬇️ Descargar</button><button class="btn btn-s" onclick="event.stopPropagation();od('+i.id+')">👁️ Ver</button></div></div>';}
+function getF(){let it=contentData;if(cf!=='all')it=it.filter(i=>i.folder===cf);if(sq){const q=sq.toLowerCase();it=it.filter(i=>i.title.toLowerCase().includes(q)||(i.content||'').toLowerCase().includes(q)||i.folderName.toLowerCase().includes(q)||i.filename.toLowerCase().includes(q));}return it;}
+function renderGrid(){const it=getF();const g=document.getElementById('mg');const e=document.getElementById('em');const rs=document.getElementById('rs');if(it.length===0){g.innerHTML='';e.style.display='block';rs.style.display='none';document.getElementById('rt').textContent='🔍 Resultados';return;}e.style.display='none';if(!sq&&cf==='all'){rs.style.display='block';const sh=[...contentData].sort(()=>.5-Math.random()).slice(0,4);document.getElementById('rg').innerHTML=sh.map(rc).join('');document.getElementById('rt').textContent='📂 Todo el Contenido';}else{rs.style.display='none';document.getElementById('rt').textContent=sq?'🔍 "'+sq+'" ('+it.length+')':'📂 Contenido';}g.innerHTML=it.map(rc).join('');}
+function sf(f){cf=f;renderTabs();renderGrid();}
+function od(id){const i=contentData.find(x=>x.id===id);if(!i)return;const ic=IM[i.type]||IM.other;const bd=BM[i.type]||'bot';const lb=TL[i.type]||'Archivo';const lk=i.type==='link';document.getElementById('dc').innerHTML='<div class="di '+ic.c+'">'+ic.e+'</div><div class="dt">'+esc(i.title)+'</div><div class="dm"><span class="bgd '+bd+'">'+lb+'</span><span>📁 '+i.folderName+'</span><span>📅 '+i.date+'</span><span>💾 '+i.size+'</span></div><div class="dc2"><pre>'+esc(i.content)+'</pre></div><div class="da"><a href="'+i.url+'" target="_blank" class="btn btn-p" '+(lk?'':'download')+'>'+(lk?'🌐 Abrir Link':'⬇️ Descargar')+'</a><button class="btn btn-s" onclick="cd()">Cerrar</button></div>';document.getElementById('ov').classList.add('on');document.body.style.overflow='hidden';}
+function cd(ev){if(ev&&ev.target!==ev.currentTarget)return;document.getElementById('ov').classList.remove('on');document.body.style.overflow='';}
+function dl(id){const i=contentData.find(x=>x.id===id);if(!i)return;if(i.type==='link')window.open(i.url,'_blank');else{const a=document.createElement('a');a.href=i.url;a.download=i.filename||i.title;a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);}}
+function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
+document.getElementById('s').addEventListener('input',e=>{sq=e.target.value.trim();renderGrid();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cd();if(e.key==='/'&&document.activeElement!==document.getElementById('s')){e.preventDefault();document.getElementById('s').focus();}});
+renderTabs();renderGrid();
+</script>
+</body>
+</html>`;
+}
+
+function copyCode() {
+  const ta = document.getElementById('resultCode');
+  ta.select();
+  document.execCommand('copy');
+  const status = document.getElementById('copyStatus');
+  status.innerHTML = '<div class="status ok">✅ Copiado! Ahora pegalo en un archivo index.html y subelo a GitHub Pages.</div>';
+}
+</script>
+</body>
+</html>

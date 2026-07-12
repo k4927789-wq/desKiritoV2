@@ -1,0 +1,5 @@
+introduccion-python.mp4 | Tutorial de fundamentos de Python - 45 min
+responsive-design.mp4 | Curso completo de diseño web responsive - 2h 30min
+premiere-pro.mp4 | Edición profesional con Adobe Premiere - 1h 15min
+after-effects-basico.mp4 | Animaciones con After Effects - 1h
+figma-ui-design.mp4 | Diseño de interfaces con Figma - 50min

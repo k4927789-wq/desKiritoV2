@@ -1,0 +1,5 @@
+tutorial-javascript.txt | Guía completa de JS moderno
+repo-github.txt | Aprende Git y GitHub
+documentacion-react.txt | Docs oficiales de React
+curso-python.txt | Tutorial Python desde cero
+dribbble-inspiracion.txt | Inspiración de diseño UI
